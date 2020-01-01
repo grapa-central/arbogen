@@ -1,6 +1,6 @@
 val countAll: Grammar.t -> int -> (int array array)
 
-val count: (int array array) -> Grammar.t -> int Grammar.expression -> int -> int -> int -> int -> bool -> int
+val count: (int array array) -> Grammar.t -> int Grammar.expression -> int -> int -> bool -> int
 
 val countSizeZero: (int array array) -> Grammar.t -> int Grammar.expression -> int -> unit
 

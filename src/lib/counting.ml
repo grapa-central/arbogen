@@ -2,30 +2,30 @@
 
 (* type specs : {names: string array; rules: int expression array} *)
 
-let rec count arrays (specs: Grammar.t) (expr: int Grammar.expression) (n: int) (initIName: int) (y: int) (iName: int) (canSet: bool) =	 
+let rec count arrays (specs: Grammar.t) (expr: int Grammar.expression) (y: int) (iName: int) (canSet: bool) =	 
        match expr with
        | Z i -> let res = (if (i == y) then 1 else 0) in 
 		if canSet then (Array.set (Array.get arrays iName) y res; res)
 		else res
-       | Union(op1, op2) -> let op1_y = count arrays specs op1 n initIName y iName false in
-			    let op2_y = count arrays specs op2 n initIName y iName false in 
+       | Union(op1, op2) -> let op1_y = count arrays specs op1 y iName false in
+			    let op2_y = count arrays specs op2 y iName false in 
 			    let res = op1_y + op2_y in
 			    if canSet then (Array.set (Array.get arrays iName) y res; res) 
 			    else res
        | Product(op1, op2) -> let sum = ref 0 in 
 			      for k = 0 to y do 
-			         let op1_k = count arrays specs op1 n initIName k iName false in
-				 let op2_n_k = count arrays specs op2 n initIName (y-k) iName false in
+			         let op1_k = count arrays specs op1 k iName false in
+				 let op2_n_k = count arrays specs op2 (y-k) iName false in
 				 sum := (!sum + op1_k * op2_n_k)
 			      done;
 			      if canSet then ((Array.set (Array.get arrays iName) y !sum; !sum))
 			      else !sum
 			      
-       | Reference r -> if ( (n == y && initIName == r) || (Array.get (Array.get arrays r) y == -2) ) then 0 
+       | Reference r -> if ( (Array.get (Array.get arrays r) y == -2) ) then 0 
 			else (
 			   if (Array.get (Array.get arrays r) y == -1) then Array.set (Array.get arrays r) y (-2);
 			   let tmp = Array.get (Array.get arrays r) y in 
-			   if(tmp >= 0) then tmp else count arrays specs (Array.get specs.rules r) y r y r true
+			   if(tmp >= 0) then tmp else count arrays specs (Array.get specs.rules r) y r true
                         )
 
        | _ -> -1 (* not handled *)	
@@ -107,7 +107,7 @@ let countAll (specs: Grammar.t) n =
 	let (expr: int Grammar.expression) = (Array.get specs.rules iName) in
 	let tmp = (Array.get (Array.get countArrays iName) y) in (* tmp = count[iName][y] (= -1 or >= 0) *)
 	if(tmp == -1) then Array.set (Array.get countArrays iName) y (-2); (* if tmp = -1 set count[iName][y] to -2 (currently computing) *)
-      	let _ = if (tmp >= 0) then tmp else (count countArrays specs (expr) y iName y iName true) in () (* if tmp >=0 count already computed *)
+      	let _ = if (tmp >= 0) then tmp else (count countArrays specs (expr) y iName true) in () (* if tmp >=0 count already computed *)
       done);
    done);
    countArrays (* returning the count matrix *)
