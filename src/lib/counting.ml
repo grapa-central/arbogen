@@ -32,8 +32,9 @@ let rec count arrays (specs: Grammar.t) (expr: int Grammar.expression) (y: int) 
       if(Z.geq tmp (Z.of_int 0)) then tmp
       else count arrays specs (Array.get specs.rules r) y r true
     )
-  | _ -> (Z.pred (Z.of_int 0)) (* not handled *)
+  | _ -> (Z.of_int (-1)) (* not handled *)
 
+(*
 let rec count_bis arrays (specs: Grammar.t) (expr: int Grammar.expression) (iName: int) (y: int) = (* counting arrays[iName][y] *)
     begin
       match (expr) with
@@ -81,7 +82,7 @@ let rec count_bis arrays (specs: Grammar.t) (expr: int Grammar.expression) (iNam
 
       | Seq(_) -> (Z.pred (Z.of_int 0)) (* not handled yet *)
     end
-
+*)
 
 let rec hasAtMostAtomeSizeZero (expr: int Grammar.expression) =
 	match expr with
@@ -102,18 +103,18 @@ let rec countUnionProductZero arrays (specs: Grammar.t) (expr: int Grammar.expre
         let countOp2 = countUnionProductZero arrays specs op2 iName in
         (Z.mul countOp1  countOp2))
      else Z.of_int 0
-   | Reference r -> if( not (Z.equal (Array.get (Array.get arrays r) 0) (Z.pred (Z.of_int 1))) )
+   | Reference r -> if( not (Z.equal (Array.get (Array.get arrays r) 0) (Z.of_int (-1))) )
      then	(Array.get (Array.get arrays r) 0)
      else
        begin
          countSizeZero arrays specs (Array.get specs.rules r) r;
-         if( not (Z.equal (Array.get (Array.get arrays r)  0) (Z.pred (Z.of_int 1))) )
+         if( not (Z.equal (Array.get (Array.get arrays r)  0) (Z.of_int (-1))) )
          then
            (Array.get (Array.get arrays r)  0)
          else
-           (print_string "should not happen countUnionZero\n"; (Z.pred (Z.of_int 1)) )
+           (print_string "should not happen countUnionZero\n"; (Z.of_int (-1)) )
 			end
-   | _ -> (Z.pred (Z.of_int 1)) (* not handled *)
+   | _ -> (Z.of_int (-1)) (* not handled *)
 
 
 
@@ -123,7 +124,7 @@ and countSizeZero arrays (specs: Grammar.t) (expr: int Grammar.expression) (iNam
     then ( Array.set (Array.get arrays iName) 0 (Z.of_int 1) )
     else ( Array.set (Array.get arrays iName) 0 (Z.of_int 0) )
 
-   | Union(_, _) -> let count = (countUnionProductZero arrays specs expr iName) in
+   | Union(_, _) -> let count = (countUnionProductZero arrays specs expr iName) in 
 			   ((Array.set (Array.get arrays iName) 0 count))
    | Product(_,_) -> let count = (countUnionProductZero arrays specs expr iName) in
 			    ((Array.set (Array.get arrays iName) 0 count))
@@ -142,7 +143,7 @@ let rec printSpec (expr: int Grammar.expression) =
 let countAll (specs: Grammar.t) n =
    let specSize = (Array.length specs.names) in
 
-   let (countArrays: Z.t array array) = ( Array.make_matrix specSize (n+1) (Z.pred (Z.of_int 0)) ) in
+   let (countArrays: Z.t array array) = ( Array.make_matrix specSize (n+1) (Z.of_int (-1)) ) in
    (* countArrays[i][y] = count(specs.names[i], y), if = -1 not yet computed, if = -2 is currently computing*)
    for j = 0 to (specSize-1) do (* printing names *)
 
@@ -164,7 +165,7 @@ let countAll (specs: Grammar.t) n =
         let (expr: int Grammar.expression) = (Array.get specs.rules iName) in
         let tmp = (Array.get (Array.get countArrays iName) y) in (* tmp = count[iName][y] (= -1 or >= 0) *)
 
-        if(Z.equal tmp (Z.pred (Z.of_int 0))) then
+        if(Z.equal tmp (Z.of_int (-1))) then
           Array.set (Array.get countArrays iName) y (Z.of_int (-2)); (* if tmp = -1 set count[iName][y] to -2 (currently computing) *)
         let _ = if (Z.geq tmp (Z.of_int 0)) then  tmp
           else (count countArrays specs (expr) y iName true) in () (* if tmp >=0 count already computed *)
