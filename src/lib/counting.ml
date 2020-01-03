@@ -2,6 +2,16 @@
 
 (* type specs : {names: string array; rules: int expression array} *)
 
+let getAtomeSize (expr: int Grammar.expression) = 
+  match expr with
+  | Z i -> i
+  | _ -> -1
+
+let isAtome (expr: int Grammar.expression) =
+   match expr with
+   | Z _ -> true
+   | _ -> false
+
 let rec count arrays (specs: Grammar.t) (expr: int Grammar.expression) (y: int) (iName: int) (canSet: bool) =
   match expr with
   | Z i -> let res = (if (i == y) then Z.of_int 1 else Z.of_int 0) in
@@ -15,11 +25,18 @@ let rec count arrays (specs: Grammar.t) (expr: int Grammar.expression) (y: int) 
     else res
 
   | Product(op1, op2) -> let sum = ref (Z.of_int 0) in
-    for k = 0 to y do
-      let op1_k = count arrays specs op1 k iName false in
-      let op2_n_k = count arrays specs op2 (y-k) iName false in
-      sum := (Z.add !sum (Z.mul op1_k op2_n_k) )
-    done;
+
+    if(isAtome op1) then let aSize = (getAtomeSize op1) in (* optimizing product if atome as left operand *)
+	 let op1_k = count arrays specs op1 aSize iName false in
+         let op2_n_k = count arrays specs op2 (y-aSize) iName false in
+         sum := (Z.add !sum (Z.mul op1_k op2_n_k) )
+    else (
+       for k = 0 to y do
+         let op1_k = count arrays specs op1 k iName false in
+         let op2_n_k = count arrays specs op2 (y-k) iName false in
+         sum := (Z.add !sum (Z.mul op1_k op2_n_k) )
+       done
+    );
     if canSet then ((Array.set (Array.get arrays iName) y !sum; !sum))
     else !sum
 
@@ -140,13 +157,39 @@ let rec printSpec (expr: int Grammar.expression) =
    | _ -> () (* not handled *)
 
 
+let rec consProductWithList opList = 
+   match opList with
+   | h1::h2::[] -> Grammar.Product(h1, h2)
+   | h1::q -> Grammar.Product(h1, (consProductWithList q))
+   | [] -> print_string "should not happen in consPWL\n"; (Grammar.Z 10)
+
+let rec getListWithAtomesOnLeft opList =
+   match opList with
+   | [] -> []
+   | h::q -> if (isAtome h) then h::(getListWithAtomesOnLeft q)
+	     else List.append (getListWithAtomesOnLeft q) (h::[])
+
+let rec getProductListOfOperands (expr: int Grammar.expression) =
+   match expr with
+   | Product(op1, op2) -> let listOp1 = getProductListOfOperands op1 in
+			  let listOp2 = getProductListOfOperands op2 in
+			  List.append listOp1 listOp2
+   | _ -> expr::[]
+   
+let rec getOptimisedExpr (expr: int Grammar.expression) = (* optimizing Product by putting all atomes (ie Grammar.Z) to the left *)
+   match expr with
+   | Union(op1, op2) -> Grammar.Union((getOptimisedExpr op1), (getOptimisedExpr op2))
+   | Product(_,_) -> let operands = getListWithAtomesOnLeft (getProductListOfOperands expr) in
+			 consProductWithList operands
+   | _ -> expr
+
+
 let countAll (specs: Grammar.t) n =
    let specSize = (Array.length specs.names) in
 
    let (countArrays: Z.t array array) = ( Array.make_matrix specSize (n+1) (Z.of_int (-1)) ) in
    (* countArrays[i][y] = count(specs.names[i], y), if = -1 not yet computed, if = -2 is currently computing*)
    for j = 0 to (specSize-1) do (* printing names *)
-
       Printf.printf "names[%d] = %s\n" j (Array.get specs.names j);
    done;
 
@@ -158,7 +201,10 @@ let countAll (specs: Grammar.t) n =
      Printf.printf "count[%d][0] = %s\n" j (Z.to_string (Array.get (Array.get countArrays j) 0))
    done;
    for j = 0 to (specSize-1) do (* printing specs in AST form *)
-      Printf.printf "%s ::= " (Array.get specs.names j); (printSpec (Array.get specs.rules j)); print_string "\n"
+      let nexpr = (getOptimisedExpr (Array.get specs.rules j)) in
+      Printf.printf "(before opti) %s ::= " (Array.get specs.names j); (printSpec (Array.get specs.rules j)); print_string "\n";
+      (Array.set specs.rules j nexpr);
+      Printf.printf "(after opti)  %s ::= " (Array.get specs.names j); (printSpec (Array.get specs.rules j)); print_string "\n"
    done;
   (for y = 1 to n do
      (for iName = 0 to (specSize-1) do (* counting *)
