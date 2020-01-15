@@ -208,30 +208,30 @@ let () =
   ) in
 
   let result, wgrm = match state with
-    | None -> 
+    | None ->
       let grammar = parse_grammar () in
 
       (* PART MODIFIED IN ORDER TO TEST FUNCTION IN COUNTING.ML **)
-      let countArrays = Counting.countAll grammar 15 in 
+      let countArrays = Counting.countAll grammar 15 in
       for j = 0 to ((Array.length countArrays) -1) do
-	      print_string (Array.get grammar.names j);
-	      print_string "[ ";
-	      for ww = 0 to 15 do
-		print_int (Array.get (Array.get countArrays j) ww); print_string " ";
-	      done;
-	      print_string " ]\n";
+        print_string (Array.get grammar.names j);
+        print_string "[ ";
+        for ww = 0 to 15 do
+          Printf.printf "%s " (Z.to_string (Array.get (Array.get countArrays j) ww));
+        done;
+        print_string " ]\n";
       done;
       (* END OF MODIF **)
 
       let oracle = make_oracle grammar in
       if (global_options.verbosity) > 0 then Format.printf "Generating tree...@.";
       let tree = Boltzmann.Gen.generator
-        grammar
-        oracle
-        (module Rng)
-        ~size_min:global_options.size_min
-        ~size_max:global_options.size_max
-        ~max_try:global_options.max_try
+          grammar
+          oracle
+          (module Rng)
+          ~size_min:global_options.size_min
+          ~size_max:global_options.size_max
+          ~max_try:global_options.max_try
       in
       tree, WeightedGrammar.of_grammar oracle grammar
     | Some state ->

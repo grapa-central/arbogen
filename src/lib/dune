@@ -40,7 +40,7 @@
 (library
  (name counting)
  (public_name arbogen.counting)
- (libraries grammar)
+ (libraries grammar zarith)
  (modules Counting))
 
 ; ** Exact-size generation **
