@@ -2,7 +2,7 @@
   match expr with 
     | Reference a -> a 
     | a -> a*)
-(*let rec generator (grammar:Grammar.t) count id n  =
+let rec generator (grammar:Grammar.t) count id n  =
   match grammar.rules.(id) with (*on recupere le premier element de l'array rule qui correspond à la regle*)
    | Grammar.Z 0 -> Tree.Node (grammar.names.(id), [])
    | Grammar.Z 1 when n == 1 -> Tree.Node (grammar.names.(id), [])
@@ -22,34 +22,7 @@ and generator_prod grammar expr k s n u id count=
   | Grammar.Product(Reference(a),Reference(b)) when u > float_of_int s -> generator_prod grammar (Grammar.Product((Reference(a),Reference(b)))) (k+1) (s+count.(a).(k)*count.(b).(n-k)/count.(id).(n)) n u id count
                    
   | Grammar.Product (Reference(a),Reference(b)) -> Tree.Node (grammar.names.(id), [(generator grammar count a k); (generator grammar count b (n-k))])
-  | _ -> generator_prod grammar expr k s n u id count*)
-
-
-
-let rec generator (grammar:Grammar.t) count id n  =
-  match grammar.rules.(id) with (*on recupere le premier element de l'array rule qui correspond à la regle*)
-   | Grammar.Z 0 -> Tree.Node (grammar.names.(id), [])
-   | Grammar.Z 1 when n == 1 -> Tree.Node (grammar.names.(id), [])
-   | Grammar.Union (Reference(a),_) when Z.compare (Z.of_float (Random.float 1.0)) (Z.div (count.(a).(n)) (count.(id).(n))) == 1 -> generator grammar count a n (*proba étant 
-                                        la fonction qui sera definit par
-                                        Katia et Firat*)
-   | Grammar.Union (_,Reference(b)) -> generator grammar count b n
-   | Grammar.Reference a -> generator grammar count a n
-  (* | Product a b when a == Z 1 -> generator expr n b *)
-   | Grammar.Product (Reference(a),Reference(b)) -> generator_prod grammar (Grammar.Product(Reference(a),Reference(b))) 0  (Z.div (Z.mul (count.(a).(0)) (count.(b).(n))) (count.(id).(n))) n (Random.float 1.0) id count
-   | _ -> generator grammar count id n
-
-
-(*l'appel sera : generator_prod expr 0 proba(a,0)*proba(b,n)/proba(expr.(1).(0),n)*)
-and generator_prod grammar expr k s n u id count= 
-  match expr with
-  | Grammar.Product(Reference(a),Reference(b)) when Z.compare (Z.of_float u) s == 1 -> generator_prod grammar (Grammar.Product((Reference(a),Reference(b)))) (k+1)  (Z.add s (Z.div (Z.mul (count.(a).(k)) (count.(b).(n-k))) (count.(id).(n)))) n u id count
-                   
-  | Grammar.Product (Reference(a),Reference(b)) -> Tree.Node (grammar.names.(id), [(generator grammar count a k); (generator grammar count b (n-k))])
   | _ -> generator_prod grammar expr k s n u id count
-
-
-
 
 (*
 let rec unranking grammar count id n r =

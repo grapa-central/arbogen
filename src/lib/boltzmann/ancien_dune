@@ -1,5 +1,5 @@
 (library
  (name boltzmann)
  (public_name arbogen.boltzmann)
- (libraries grammar randtools tree oracles counting ))
+ (libraries grammar randtools tree oracles))
 

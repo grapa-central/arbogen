@@ -14,6 +14,7 @@
 
 open Frontend
 open Options
+open Recursive_method
 module WeightedGrammar = Boltzmann.WeightedGrammar
 
 let version_str = "arbogen v1.0c"
@@ -221,23 +222,25 @@ let () =
         done;
         print_string " ]\n";
       done;
+     (* RecursiveMethod.generator grammar countArrays 0 4 in
+      True;*)
+
+
       (* END OF MODIF **)
 
       let oracle = make_oracle grammar in
       if (global_options.verbosity) > 0 then Format.printf "Generating tree...@.";
-      let tree = Boltzmann.Gen.generator
+      let tree = RecursiveMethod.generator
           grammar
-          oracle
-          (module Rng)
-          ~size_min:global_options.size_min
-          ~size_max:global_options.size_max
-          ~max_try:global_options.max_try
+          countArrays
+          0
+          4
       in
       tree, WeightedGrammar.of_grammar oracle grammar
-    | Some state ->
-      Rng.(State.from_bytes state.rnd_state |> set_state);
+    | Some state -> true
+      (*Rng.(State.from_bytes state.rnd_state |> set_state);
       let tree = Boltzmann.Gen.free_gen (module Rng) state.weighted_grammar in
-      Some tree, state.weighted_grammar
+      Some tree, state.weighted_grammar*)
   in
 
   match result with
