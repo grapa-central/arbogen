@@ -10,7 +10,7 @@
   - [rules = [| Union (Z 0, Product (Z 1, Product (Reference 0; Reference 0))) |]]
   - [names = [| "B" |]]
 *)
-type t = {names: string array; rules: int expression array}
+type t = {mutable names: string array; mutable rules: int expression array}
 
 (** The supported expressions are:
   - atoms, potentially elevated to the power of some integer

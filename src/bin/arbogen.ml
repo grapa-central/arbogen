@@ -212,11 +212,12 @@ let () =
       let grammar = parse_grammar () in
 
       (* PART MODIFIED IN ORDER TO TEST FUNCTION IN COUNTING.ML **)
-      let countArrays = Counting.countAll grammar 15 in
+      let n = 15 in
+      let (countArrays, _) = Counting.countAll grammar n in
       for j = 0 to ((Array.length countArrays) -1) do
         print_string (Array.get grammar.names j);
         print_string "[ ";
-        for ww = 0 to 15 do
+        for ww = 0 to n do
           Printf.printf "%s " (Z.to_string (Array.get (Array.get countArrays j) ww));
         done;
         print_string " ]\n";
@@ -244,7 +245,7 @@ let () =
   | None ->
     Format.eprintf "No tree generated ==> try to use different parameters@.";
     exit 1
-  | Some (tree, size) ->
+  | Some ((*tree*)_, size) ->
     let final_state = Boltzmann.GenState.{
       randgen = Rng.name;
       rnd_state = Rng.(State.to_bytes (get_state ()));
@@ -261,5 +262,5 @@ let () =
     if global_options.verbosity >= 2 then
       Format.printf "==> Saving state to file '%s'@." out_state;
 
-    Boltzmann.GenState.to_file out_state final_state;
-    print_tree tree
+    Boltzmann.GenState.to_file out_state final_state
+    (*print_tree tree*)
