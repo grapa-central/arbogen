@@ -2,17 +2,19 @@
 
 (* type specs : {names: string array; rules: int expression array} *)
 
-let getAtomeSize (expr: int Grammar.expression) = 
+let getAtomeInfo (expr: int Grammar.expression) = 
   match expr with
-  | Z i -> i
-  | _ -> -1
+  | Z i -> (true,i)
+  | _ -> (false,-1)
 
 let isAtome (expr: int Grammar.expression) =
    match expr with
    | Z _ -> true
    | _ -> false
 
-let rec count arrays (specs: Grammar.t) (expr: int Grammar.expression) (y: int) (iName: int) (canSet: bool) =
+let rec count arrays (specs: Grammar.t) (expr: int Grammar.expression) (y: int) (iName: int) (canSet: bool) = 
+  if y == (-1) then (Z.of_int 0)
+  else
   match expr with
   | Z i -> let res = (if (i == y) then Z.of_int 1 else Z.of_int 0) in
     if canSet then (Array.set (Array.get arrays iName) y res; res)
@@ -25,8 +27,9 @@ let rec count arrays (specs: Grammar.t) (expr: int Grammar.expression) (y: int) 
     else res
 
   | Product(op1, op2) -> let sum = ref (Z.of_int 0) in
-
-    if(isAtome op1) then let aSize = (getAtomeSize op1) in (* optimizing product if atome as left operand *)
+	
+    let (isAtome, aSize) = (getAtomeInfo op1) in
+    if isAtome then (* optimizing product if atome as left operand *)
 	 let op1_k = count arrays specs op1 aSize iName false in
          let op2_n_k = count arrays specs op2 (y-aSize) iName false in
          sum := (Z.add !sum (Z.mul op1_k op2_n_k) )
@@ -49,54 +52,7 @@ let rec count arrays (specs: Grammar.t) (expr: int Grammar.expression) (y: int) 
       if(Z.geq tmp (Z.of_int 0)) then tmp
       else count arrays specs (Array.get specs.rules r) y r true
     )
-  | _ -> (Z.of_int (-1)) (* not handled *)
-
-let rec hasAtMostAtomeSizeZero (expr: int Grammar.expression) =
-	match expr with
-	| Z 0 -> true
-	| Z _ -> false
-	| Product(op1,op2) -> (hasAtMostAtomeSizeZero op1) && (hasAtMostAtomeSizeZero op2)
-	| _ -> true
-
-let rec countUnionProductZero arrays (specs: Grammar.t) (expr: int Grammar.expression) (iName: int) =
-   match expr with
-   | Z n -> if(n==0) then Z.of_int 1 else Z.of_int 0
-   | Union(op1, op2) -> let countOp1 = countUnionProductZero arrays specs op1 iName in
-			   let countOp2 = countUnionProductZero arrays specs op2 iName in
-			      (Z.add countOp1  countOp2)
-   | Product(op1, op2) -> if(hasAtMostAtomeSizeZero expr)
-     then
-       (let countOp1 = countUnionProductZero arrays specs op1 iName in
-        let countOp2 = countUnionProductZero arrays specs op2 iName in
-        (Z.mul countOp1  countOp2))
-     else Z.of_int 0
-   | Reference r -> if( not (Z.equal (Array.get (Array.get arrays r) 0) (Z.of_int (-1))) )
-     then	(Array.get (Array.get arrays r) 0)
-     else
-       begin
-         countSizeZero arrays specs (Array.get specs.rules r) r;
-         if( not (Z.equal (Array.get (Array.get arrays r)  0) (Z.of_int (-1))) )
-         then
-           (Array.get (Array.get arrays r)  0)
-         else
-           (print_string "should not happen countUnionZero\n"; (Z.of_int (-1)) )
-			end
-   | _ -> (Z.of_int (-1)) (* not handled *)
-
-
-
-and countSizeZero arrays (specs: Grammar.t) (expr: int Grammar.expression) (iName: int) =
-  match expr with
-  | Z n -> if(n == 0)
-    then ( Array.set (Array.get arrays iName) 0 (Z.of_int 1) )
-    else ( Array.set (Array.get arrays iName) 0 (Z.of_int 0) )
-
-   | Union(_, _) -> let count = (countUnionProductZero arrays specs expr iName) in 
-			   ((Array.set (Array.get arrays iName) 0 count))
-   | Product(_,_) -> let count = (countUnionProductZero arrays specs expr iName) in
-			    ((Array.set (Array.get arrays iName) 0 count))
-   | _ -> () (* not handled *)
-
+  | _ -> Printf.printf "case not handled in count\n"; (Z.of_int (-1)) (* not handled *)
 
 let rec printSpec (expr: int Grammar.expression) =
    match expr with
@@ -105,6 +61,7 @@ let rec printSpec (expr: int Grammar.expression) =
    | Product(op1, op2) ->print_string "Product("; (printSpec op1); print_string ", "; (printSpec op2); print_string ")"
    | Reference r -> Printf.printf "Reference %d" r
    | _ -> () (* not handled *)
+
 
 
 let rec consProductWithList opList = 
@@ -133,6 +90,7 @@ let rec getOptimisedExpr (expr: int Grammar.expression) = (* optimizing Product 
 			 consProductWithList operands
    | _ -> expr
 
+
 let rec isEqualExpr (exprA: int Grammar.expression) (exprB: int Grammar.expression) = 
    match (exprA, exprB) with
    | (Z i, Z y) -> if (i == y) then true else false
@@ -159,7 +117,7 @@ let rename (specs: Grammar.t) (expr: int Grammar.expression) =
                    if (!isDuplicate) then
 		      (!duplicateRef, !isDuplicate)
 		   else 
-                      (let newName = (String.concat "_rename_" [string_of_int specsSize]) in
+                      (let newName = ("_rename_" ^(string_of_int specsSize)) in
 		      let tmpArray = (Array.make 1 newName) in 
 		      let tmpArrayExpr = (Array.make 1 expr) in 
                       specs.names <- (Array.append specs.names tmpArray);
@@ -175,7 +133,7 @@ let rename (specs: Grammar.t) (expr: int Grammar.expression) =
 		     if (!isDuplicate) then
 		      (!duplicateRef, !isDuplicate)
 		     else
-                        (let newName = (String.concat "_rename_" [string_of_int specsSize]) in
+                        (let newName = ("_rename_" ^(string_of_int specsSize)) in
 		        let tmpArray = (Array.make 1 newName) in 
 			let tmpArrayExpr = (Array.make 1 expr) in 
                         specs.names <- (Array.append specs.names tmpArray);
@@ -210,7 +168,7 @@ let renameSpec (specs: Grammar.t) (expr: int Grammar.expression) =
 			   Product(op1, Reference referenceNumberOp2)
 		        | (false, false) ->
 			   expr)
-   | _ -> expr (* not handled *)
+   | _ -> Printf.printf "case not handled in renameSpec\n"; expr (* not handled *)
 
 let renameSpecs (specs: Grammar.t) = 
    let i = ref 0 in 
@@ -225,25 +183,21 @@ let countAll (specs: Grammar.t) n =
    let specSize = (Array.length specs.names) in
 
    let (countArrays: Z.t array array) = ( Array.make_matrix specSize (n+1) (Z.of_int (-1)) ) in
-   (* countArrays[i][y] = count(specs.names[i], y), if = -1 not yet computed, if = -2 is currently computing*)
-   for j = 0 to (specSize-1) do (* printing names *)
-      Printf.printf "names[%d] = %s\n" j (Array.get specs.names j);
+   
+   print_string "Renamed spec :\n";
+   for j = 0 to (specSize-1) do (* printing specs in AST form *)
+      Printf.printf "%s ::= " (Array.get specs.names j); (printSpec (Array.get specs.rules j)); print_string "\n"
    done;
-
-   for j = 0 to (specSize-1) do (* counting number of objets of size 0 for each spec in specs *)
-      countSizeZero countArrays specs (Array.get specs.rules j) j
-   done;
-
-   for j = 0 to (specSize-1) do (* printing number of objets of size 0 for each spec in specs *)
-     Printf.printf "count[%d][0] = %s\n" j (Z.to_string (Array.get (Array.get countArrays j) 0))
-   done;
+   
+   print_string "\nOptimised spec : (for Product)\n";
    for j = 0 to (specSize-1) do (* printing specs in AST form *)
       let nexpr = (getOptimisedExpr (Array.get specs.rules j)) in
-      Printf.printf "(before opti) %s ::= " (Array.get specs.names j); (printSpec (Array.get specs.rules j)); print_string "\n";
       (Array.set specs.rules j nexpr);
-      Printf.printf "(after opti)  %s ::= " (Array.get specs.names j); (printSpec (Array.get specs.rules j)); print_string "\n"
+      Printf.printf "%s ::= " (Array.get specs.names j); (printSpec (Array.get specs.rules j)); print_string "\n"
    done;
-  (for y = 1 to n do
+   print_string "\n";
+
+  (for y = 0 to n do
      (for iName = 0 to (specSize-1) do (* counting *)
         let (expr: int Grammar.expression) = (Array.get specs.rules iName) in
         let tmp = (Array.get (Array.get countArrays iName) y) in (* tmp = count[iName][y] (= -1 or >= 0) *)
@@ -254,4 +208,4 @@ let countAll (specs: Grammar.t) n =
           else (count countArrays specs (expr) y iName true) in () (* if tmp >=0 count already computed *)
       done);
     done);
-   (countArrays, specs) (* returning the count matrix *)
+   (countArrays, specs) (* returning the count matrix and the modified specs*)
