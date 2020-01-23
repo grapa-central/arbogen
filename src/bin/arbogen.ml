@@ -14,6 +14,7 @@
 
 open Frontend
 open Options
+open Recursive_method
 module WeightedGrammar = Boltzmann.WeightedGrammar
 
 let version_str = "arbogen v1.0c"
@@ -213,7 +214,7 @@ let () =
 
       (* PART MODIFIED IN ORDER TO TEST FUNCTION IN COUNTING.ML **)
       let n = 15 in
-      let (countArrays, _) = Counting.countAll grammar n in
+      let (countArrays, specs) = Counting.countAll grammar n in
       for j = 0 to ((Array.length countArrays) -1) do
         print_string (Array.get grammar.names j);
         print_string "[ ";
@@ -222,6 +223,15 @@ let () =
         done;
         print_string " ]\n";
       done;
+print_string "\n";
+	let tree = RecursiveMethod.generator
+          specs
+          countArrays
+          0
+          4
+        in 
+       print_tree tree;
+
       (* END OF MODIF **)
 
       let oracle = make_oracle grammar in

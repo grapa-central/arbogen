@@ -1,7 +1,7 @@
 
 // grammar file for binary trees (counting leaves and internal nodes)
 
-BinNode ::=  Leaf * <z> + BinNode * BinNode * <z>
+BinNode ::=  Leaf * <z> + BinNode * <z> * BinNode
 
 /* variant : binary trees (counting internal nodes)
 

@@ -7,4 +7,4 @@ set max 120000
 set try 500
 
 BinNode ::=  Leaf + BinNode * BinNode * <z>
-Leaf ::= <z>
+Leaf ::= <1>

@@ -47,5 +47,5 @@
 (library
  (name recursive_method)
  (public_name arbogen.recursive_method)
- (libraries grammar counting)
+ (libraries grammar counting tree zarith)
  (modules RecursiveMethod))
