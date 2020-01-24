@@ -143,43 +143,29 @@ let rename (specs: Grammar.t) (expr: int Grammar.expression) mapSeq=
        (specsSize, true))
 
    | Seq e ->
-     (print_string "    [RENAME SEQ] >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>: \n";
      let specsSize = (Array.length specs.names) in
      let valueFind = ref (-1) in
      let duplicateRef = ref (-1) in
      let alreadyExist = ref false in
-
-     (*if (Array.mem new_name specs.names) then (alreadyExist := true);*)
      let result_find = Hashtbl.find_opt mapSeq e in
 
      alreadyExist := ( match result_find with
-         | None -> (Printf.printf "     alreadyExist : False \n"; false)
-         | Some e -> (Printf.printf "     alreadyExist : True \n";valueFind:= e; true ));
-
-     let specsRename = Array.get specs.rules !valueFind in
-
+         | None -> false
+         | Some e -> valueFind:= e; true );
 
      if (!alreadyExist) then
-       (print_string ">>>>>> [IF] je suis alreadyExist: "; print_int !valueFind; print_string ".\n";
-        Printf.printf "     (before opti) %i ::= " !duplicateRef;
-        duplicateRef := !valueFind;
-        (!duplicateRef, false))
+       (duplicateRef := !valueFind;
+        (!duplicateRef, true))
      else(
        let newName = ("_rename_" ^(string_of_int specsSize))  in
        let tmpArray = (Array.make 1 newName) in
-       let tmpArrayExpr = (Array.make 1 expr) in
+       let exp = Grammar.Union(Z 0, Grammar.Product( e , Reference specsSize)) in
+       let tmpArrayExpr = (Array.make 1 (exp)) in
        specs.rules <- (Array.append specs.rules tmpArrayExpr);
        specs.names <- (Array.append specs.names tmpArray);
        Hashtbl.add mapSeq e specsSize;
-       Printf.printf ">>>>>> [ELSE] je viens de rajouter la ref: %d.\n" specsSize;
        (specsSize, true))
-     )
    | _ -> ((-1), false)
-
-let print_bool b =
-  match b with
-  | true -> print_string "True"
-  | false -> print_string "False"
 
   let renameSpec (specs: Grammar.t) (expr: int Grammar.expression) my_hash =
    match expr with
@@ -197,38 +183,19 @@ let print_bool b =
     | (false, false) ->
 			   expr)
    | Product(op1, op2) ->
-
-     (print_string "PRO >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>: \n";
-
       let (referenceNumberOp1, renamingOp1) = rename specs op1 my_hash in
-      print_string "   result de op1 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>: \n";
-      print_string "   renamingOp1 : "; print_bool renamingOp1; print_string "\n";
-
       let (referenceNumberOp2, renamingOp2) = rename specs op2 my_hash in
-      print_string "   result de op2 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>: \n";
-      print_string "   renamingOpE : "; print_bool renamingOp2; print_string "\n";
-
       (match (renamingOp1, renamingOp2) with
       | (true, true) ->
         Product(Reference referenceNumberOp1, Reference referenceNumberOp2);
       | (true, false) ->
         Product(Reference referenceNumberOp1, op2);
-      | (false, true) -> (Printf.printf " je suis la !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ::= ";
-                          Product(op1, Reference referenceNumberOp2))
+      | (false, true) -> Product(op1, Reference referenceNumberOp2)
       | (false, false) ->
-        expr))
-   | Seq e ->
-     (print_string "SEQ >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>: \n";
-      let (referenceNumberE, renamingE) = rename specs expr my_hash in
-      if renamingE then print_string "true\n" else print_string "false\n";
-      (print_string "referenceNumberE:"; print_int referenceNumberE; print_string ".\n";
-       match (renamingE) with
-       | (true) -> (Printf.printf " --- ajout de la ref ";
-                    Union(Z 0, Product( e , Reference referenceNumberE)))
-       | (false) -> (Printf.printf " --- renvoie de la ref ";
-                     Reference referenceNumberE)))
+        expr)
+   | Seq _ ->
+     let (referenceNumberE, _) = rename specs expr my_hash in Reference referenceNumberE
 
-(* | _ -> Printf.printf "case not handled in renameSpec\n"; expr (* not handled *)*)
 
 let renameSpecs (specs: Grammar.t) =
   let i = ref 0 in
