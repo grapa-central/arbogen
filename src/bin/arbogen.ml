@@ -213,7 +213,7 @@ let () =
       let grammar = parse_grammar () in
 
       (* PART MODIFIED IN ORDER TO TEST FUNCTION IN COUNTING.ML **)
-      let countArrays = Counting.countAll grammar 15 in
+      let (countArrays,specs) = Counting.countAll grammar 15 in
       for j = 0 to ((Array.length countArrays) -1) do
         print_string (Array.get grammar.names j);
         print_string "[ ";
@@ -228,12 +228,12 @@ let () =
 
       (* END OF MODIF **)
 
-  
+      let _ = Random.self_init() in 
       let tree = RecursiveMethod.generator
-          grammar
+          specs
           countArrays
           0
-          4
+          5
         in 
        print_tree tree;
 

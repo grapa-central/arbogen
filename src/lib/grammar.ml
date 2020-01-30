@@ -12,7 +12,7 @@
  *           GNU GPL v.3 licence (cf. LICENSE file)      *
  *********************************************************)
 
-type t = {names: string array; rules: int expression array}
+type t = {mutable names: string array; mutable rules: int expression array}
 
 and 'ref expression =
   | Z of int
