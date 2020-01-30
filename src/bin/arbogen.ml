@@ -211,13 +211,13 @@ let () =
   let result, wgrm = match state with
     | None ->
       let grammar = parse_grammar () in
-
+      let n = 6000 in
       (* PART MODIFIED IN ORDER TO TEST FUNCTION IN COUNTING.ML **)
-      let (countArrays,specs) = Counting.countAll grammar 15 in
+      let (countArrays,specs) = Counting.countAll grammar n in
       for j = 0 to ((Array.length countArrays) -1) do
         print_string (Array.get grammar.names j);
         print_string "[ ";
-        for ww = 0 to 15 do
+        for ww = 0 to n do
           Printf.printf "%s " (Z.to_string (Array.get (Array.get countArrays j) ww));
         done;
         print_string " ]\n";
@@ -228,16 +228,16 @@ let () =
 
       (* END OF MODIF **)
 
-      let _ = Random.self_init() in 
+      let _ = Random.self_init() in
       let tree = RecursiveMethod.generator
           specs
           countArrays
           0
           5
-        in 
+        in
        print_tree tree;
 
-      
+
       let oracle = make_oracle grammar in
       if (global_options.verbosity) > 0 then Format.printf "Generating tree...@.";
       let tree = Boltzmann.Gen.generator
