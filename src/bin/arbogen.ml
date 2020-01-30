@@ -223,12 +223,13 @@ let () =
         done;
         print_string " ]\n";
       done;
-print_string "\n";
+	print_string "\n";
+	let _ = Random.self_init() in
 	let tree = RecursiveMethod.generator
           specs
           countArrays
           0
-          4
+          3
         in 
        print_tree tree;
 

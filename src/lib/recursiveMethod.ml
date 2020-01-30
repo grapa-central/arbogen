@@ -34,11 +34,53 @@ let rec printSpec (expr: int Grammar.expression) =
    | Reference r -> Printf.printf "Reference %d" r
    | _ -> () (* not handled *)
 
+let generateZ z n = 
+   match z with
+	| Grammar.Z 0 -> Tree.Node ("Z0", [])
+	| Grammar.Z i when n == i -> Tree.Node ("Z"^(string_of_int i), []) 
+	| _ -> print_string "not handled in generateZ\n"; Tree.Node ("Unknown", []) 
+
+
+let rec generator (grammar:Grammar.t) count id n = 
+   match grammar.rules.(id) with (*on recupere le premier element de l'array rule qui correspond à la regle*)
+	   | Grammar.Z 0 -> Tree.Node (grammar.names.(id), [])
+	   | Grammar.Z i when n == i -> Tree.Node (grammar.names.(id), []) 
+	   | Grammar.Union (Reference(a), Reference(b)) -> let randInt = Random.int (Z.to_int (count.(id).(n))) in 
+							let randZ = Z.of_int randInt in 
+							if randZ < count.(a).(n) then generator grammar count a n
+							else generator grammar count b n
+	   | Grammar.Union (Reference(a), Z(b)) -> let randInt = Random.int (Z.to_int (count.(id).(n))) in 
+							let randZ = Z.of_int randInt in 
+							if randZ < count.(a).(n) then generator grammar count a n
+							else generateZ (Grammar.Z(b)) n
+	   | Grammar.Union (Z(a), Reference(b)) -> let countZ = (Z.sub count.(id).(n)  count.(a).(n)) in		
+							let randInt = Random.int (Z.to_int (count.(id).(n))) in 
+							let randZ = Z.of_int randInt in 
+							if randZ < countZ then generateZ (Grammar.Z(a)) n
+							else generator grammar count b n 
+	   | Grammar.Product (Reference(a), Reference(b)) -> let randInt = (Random.int (Z.to_int (count.(id).(n)))) in 
+							let randZ = Z.of_int randInt in 
+							let i = ref 0 in 
+							let s = ref (Z.add count.(a).(!i) count.(b).(n-(!i))) in 
+							while (Z.leq (!s) randZ) do
+								i := !i + 1;
+								s := (Z.add !s (Z.add count.(a).(!i)  count.(b).(n-(!i))))
+							done;
+							Tree.Node (grammar.names.(id), [generator grammar count a (!i); generator grammar count b (n-(!i))])
+	   | Grammar.Product (Z(a), Reference(b)) -> Tree.Node (grammar.names.(id),  [generateZ (Grammar.Z(a)) a; generator grammar count b (n-a)])
+
+	   | _ -> print_string "not handled in generator\n"; Tree.Node ("Unknown", []) 
+
+	  
+	    
+
+
+(*
 let rec generator (grammar:Grammar.t) count id n  =(* print_int n ;printSpec grammar.rules.(id); print_string "\n";*)
    let e = (if n==1 then (1.0) else (0.0)) in
    match grammar.rules.(id) with (*on recupere le premier element de l'array rule qui correspond à la regle*)
 	   | Grammar.Z 0 -> Tree.Node (grammar.names.(id), [])
-	   | Grammar.Z 1 when n == 1 -> Tree.Node (grammar.names.(id), [])
+	   | Grammar.Z i when n == i -> Tree.Node (grammar.names.(id), [])
 	   | Grammar.Union (Reference(a),Reference(_)) when (Random.float 1.0) > (Z.to_float (count.(a).(n)) /. Z.to_float(count.(id).(n))) -> generator grammar count a n 
 	   | Grammar.Union (Reference(_),Reference(b)) -> generator grammar count b n
 	   | Grammar.Union (Reference(a),Z(_)) when Random.float 1.0 >(Z.to_float (count.(a).(n)) /. Z.to_float (count.(id).(n)))  -> generator grammar count a n 
@@ -52,7 +94,7 @@ let rec generator (grammar:Grammar.t) count id n  =(* print_int n ;printSpec gra
 	   | Grammar.Product (Reference(a),Z(b)) -> let e = (if n==1 then 1 else 0) in generator_prod grammar (Grammar.Product(Reference(a),Z(b))) 0  ( ((Z.to_float count.(a).(0)) *. (float_of_int e)) /. (Z.to_float count.(id).(n)) ) n (Random.float 1.0) id count
     
 	   | _ -> Printf.printf "erreur in generation (not handled case)\n"; Tree.Node (grammar.names.(id), []) 
-    
+   *) 
 
 (*
 and generator_prod grammar expr k s n u id count= 
@@ -71,7 +113,7 @@ and generator_prod grammar expr k s n u id count=
 *)
 
 (*l'appel sera : generator_prod expr 0 proba(a,0)*proba(b,n)/proba(expr.(1).(0),n)*)
-
+(*
 and generator_prod grammar expr k s n u id count=  Printf.printf "k = %d, n = %d, s = %f, u = %f\n" k n s u;
   match expr with
   | Grammar.Product(Reference(a),Reference(b)) when  u > s-> generator_prod grammar (Grammar.Product((Reference(a),Reference(b)))) (k+1)  (Z.to_float(Z.add  (Z.of_float s) (Z.div (Z.mul (count.(a).(k)) (count.(b).(n-k))) (count.(id).(n))))) n u id count
@@ -86,7 +128,7 @@ and generator_prod grammar expr k s n u id count=  Printf.printf "k = %d, n = %d
   | Grammar.Product (Reference(a),Z (_)) -> Tree.Node (grammar.names.(id), [(generator grammar count a k); Tree.Node (grammar.names.(id), [])])
   | _ -> Printf.printf "erreur in generation (not handled case)\n"; Tree.Node (grammar.names.(id), [])
 
-
+*)
 
 (*
 let rec unranking grammar count id n r =
