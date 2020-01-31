@@ -211,7 +211,7 @@ let () =
   let result, wgrm = match state with
     | None ->
       let grammar = parse_grammar () in
-      let n = 6000 in
+      let n = 15 in
       (* PART MODIFIED IN ORDER TO TEST FUNCTION IN COUNTING.ML **)
       let (countArrays,specs) = Counting.countAll grammar n in
       for j = 0 to ((Array.length countArrays) -1) do
@@ -229,11 +229,13 @@ let () =
       (* END OF MODIF **)
 
       let _ = Random.self_init() in
-      let tree = RecursiveMethod.generator
+      let tree = RecursiveMethod.unranking
           specs
           countArrays
           0
           5
+          0
+          1
         in
        print_tree tree;
 
