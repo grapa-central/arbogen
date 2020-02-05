@@ -224,7 +224,7 @@ let () =
         print_string " ]\n";
       done;
 
-     let size = 3 in
+     let size = 4 in
      Printf.printf "\nGenerating a few trees of size %d:\n" size;
      let nn = ref (Z.of_int 0) in
      while !nn < countArrays.(0).(size) do
@@ -235,7 +235,7 @@ let () =
      	print_tree tree
      done;
 
-     (*RecursiveMethod.testUniform specs countArrays 0 size (-1) 100000;*)
+     (*RecursiveMethod.testUniform specs countArrays 0 size (0) 100000;*)
      (*Counting.memoryUsage grammar 5000 "testMemoryUBTree.txt";*)
      (*Counting.memoryUsageDivByNumberOfRules grammar 5000 "testMemoryBinaryDivRules.txt";*)    
      (*Counting.execTime grammar 5000 "execTimeUBTree.txt";*)
