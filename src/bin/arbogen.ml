@@ -213,28 +213,35 @@ let () =
       let grammar = parse_grammar () in
 
       (* PART MODIFIED IN ORDER TO TEST FUNCTION IN COUNTING.ML **)
-      let n = 15 in
-      let (countArrays, specs) = Counting.countAll grammar n in
+      let n = 1000 in
+      let (countArrays,specs) = Counting.countAll grammar n in 
       for j = 0 to ((Array.length countArrays) -1) do
         print_string (Array.get grammar.names j);
         print_string "[ ";
-        for ww = 0 to n do
+        for ww = 0 to 15 do
           Printf.printf "%s " (Z.to_string (Array.get (Array.get countArrays j) ww));
         done;
         print_string " ]\n";
       done;
-	print_string "\n";
-	let _ = Random.self_init() in
-	let tree = RecursiveMethod.generator
-          specs
-          countArrays
-          0
-          3
-        in 
-       print_tree tree;
 
-      (* END OF MODIF **)
+     let size = 3 in
+     Printf.printf "\nGenerating a few trees of size %d:\n" size;
+     let nn = ref (Z.of_int 0) in
+     while !nn < countArrays.(0).(size) do
+     let _ = Random.self_init() in
+     	let tree = RecursiveMethod.generator specs countArrays 0 size (-1) in
+	(*let tree = RecursiveMethod.unranking specs countArrays 0 size 0 !nn in*)
+	nn := (Z.add !nn (Z.of_int 1));
+     	print_tree tree
+     done;
 
+     (*RecursiveMethod.testUniform specs countArrays 0 size (-1) 100000;*)
+     (*Counting.memoryUsage grammar 5000 "testMemoryUBTree.txt";*)
+     (*Counting.memoryUsageDivByNumberOfRules grammar 5000 "testMemoryBinaryDivRules.txt";*)    
+     (*Counting.execTime grammar 5000 "execTimeUBTree.txt";*)
+     (*RecursiveMethod.execTime specs countArrays 0 5000 (-1) "execTimeMethRecBinaryLexico.txt";*)
+     (* END OF MODIF **)
+      
       let oracle = make_oracle grammar in
       if (global_options.verbosity) > 0 then Format.printf "Generating tree...@.";
       let tree = Boltzmann.Gen.generator
@@ -246,8 +253,7 @@ let () =
           ~max_try:global_options.max_try
       in
       tree, WeightedGrammar.of_grammar oracle grammar
-    | Some state ->
-      Rng.(State.from_bytes state.rnd_state |> set_state);
+    | Some state -> Rng.(State.from_bytes state.rnd_state |> set_state);
       let tree = Boltzmann.Gen.free_gen (module Rng) state.weighted_grammar in
       Some tree, state.weighted_grammar
   in
@@ -256,7 +262,7 @@ let () =
   | None ->
     Format.eprintf "No tree generated ==> try to use different parameters@.";
     exit 1
-  | Some ((*tree*)_, size) ->
+  | Some (_, size) ->
     let final_state = Boltzmann.GenState.{
       randgen = Rng.name;
       rnd_state = Rng.(State.to_bytes (get_state ()));

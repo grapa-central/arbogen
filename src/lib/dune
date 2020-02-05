@@ -40,12 +40,12 @@
 (library
  (name counting)
  (public_name arbogen.counting)
- (libraries grammar zarith)
+ (libraries grammar zarith unix)
  (modules Counting))
 
 ; ** Exact-size generation **
 (library
  (name recursive_method)
  (public_name arbogen.recursive_method)
- (libraries grammar counting tree zarith)
+ (libraries grammar counting tree zarith unix)
  (modules RecursiveMethod))
