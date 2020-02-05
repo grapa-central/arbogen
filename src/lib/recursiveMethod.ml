@@ -114,7 +114,14 @@ let rec generator (grammar:Grammar.t) count id n bp =
                   order:=1;
                   s := (Z.add !s (Z.mul count.(a).(!i)  count.(b).(n-(!i)))))
                 done;
-		Tree.Node ((string_of_int !i)^(string_of_int (n-(!i)))^"OP1", [generator grammar count a (!i) bp; generator grammar count b (n-(!i)) bp])
+		if (bp<>(-1)) then
+		  (
+		   if (!order == 1) then		
+			Tree.Node ((string_of_int (n-(!i)))^(string_of_int !i)^"OP1", [generator grammar count a (n-(!i)) bp; generator grammar count b (!i) bp])	 	      
+		   else 
+			Tree.Node ((string_of_int !i)^(string_of_int (n-(!i)))^"OP1", [generator grammar count a (!i) bp; generator grammar count b (n-(!i)) bp])
+		  )
+        	else Tree.Node ((string_of_int !i)^(string_of_int (n-(!i)))^"OP1", [generator grammar count a (!i) bp; generator grammar count b (n-(!i)) bp])
        | Grammar.Product (Z(a), Reference(b)) -> Tree.Node ("OP2"^(string_of_int a)^(string_of_int (n-a)),  [generateZ (Grammar.Z(a)) a; generator grammar count b (n-a) bp])
 						  
        | _ -> print_string "not handled in generator\n"; Tree.Node ("Unknown", [])
