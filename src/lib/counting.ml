@@ -207,6 +207,11 @@ let renameSpecs (specs: Grammar.t) =
    done
 
 let countAll (specs: Grammar.t) n =
+   print_string "Spec :\n";
+   for j = 0 to ((Array.length specs.names) -1) do 
+      Printf.printf "%s ::= " (Array.get specs.names j); (printSpec (Array.get specs.rules j)); print_string "\n"
+   done;
+   print_string "\n";
    renameSpecs specs;
    let specSize = (Array.length specs.names) in
 
